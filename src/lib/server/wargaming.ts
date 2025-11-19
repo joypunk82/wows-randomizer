@@ -32,6 +32,8 @@ export function getLoginUrl(redirectUri: string): string {
 		application_id: WARGAMING_APP_ID,
 		redirect_uri: redirectUri,
 		display: 'page'
+		// Note: We need full OAuth access to retrieve private ship data (in_garage status)
+		// This is required by Wargaming's API to see which ships are in your port
 	});
 	
 	return `https://api.worldoftanks.${WARGAMING_REGION}/wot/auth/login/?${params.toString()}`;

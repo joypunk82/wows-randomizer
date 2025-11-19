@@ -10,3 +10,7 @@ export const load = async ({ cookies }: { cookies: any }) => {
 		} : null
 	};
 };
+
+// Don't cache user session data
+export const ssr = true;
+export const csr = true;

@@ -10,6 +10,10 @@
 			nations: string[];
 			tiers: number[];
 			types: string[];
+			user: {
+				nickname: string;
+				accountId: string;
+			};
 		};
 	}
 	
@@ -144,7 +148,7 @@
 	<div class="max-w-7xl mx-auto px-4 py-8">
 		<!-- Page Header with Filter Toggle -->
 		<div class="mb-6">
-			<div class="flex items-center justify-between mb-4">
+			<div class="flex items-center justify-between mb-4 gap-4 flex-wrap">
 				<button
 					onclick={() => sidebarOpen = !sidebarOpen}
 					class="flex items-center gap-3 px-6 py-3 bg-gradient-to-r from-[#1a2942] to-[#2a3952] border-2 border-[#d4af37] rounded-lg hover:border-[#f4d03f] transition-all shadow-lg hover:shadow-xl"
@@ -154,11 +158,26 @@
 					<span class="text-[#7a8b99] text-sm">({filteredShips().length} ships)</span>
 				</button>
 				
-				<DiceButton
-					onclick={rollDice}
-					disabled={filteredShips().length === 0 || isRolling}
-					rolling={isRolling}
-				/>
+				<div class="flex items-center gap-4 flex-wrap">
+					<DiceButton
+						onclick={rollDice}
+						disabled={filteredShips().length === 0 || isRolling}
+						rolling={isRolling}
+					/>
+					
+					<!-- User Profile / Logout -->
+					<div class="flex items-center gap-3 px-6 py-3 bg-gradient-to-r from-[#1a2942] to-[#2a3952] border-2 border-[#2a3952] rounded-lg">
+						<span class="text-[#7a8b99] text-sm">Captain:</span>
+						<span class="text-[#d4af37] font-bold">{data.user.nickname}</span>
+						<a
+							href="/auth/logout"
+							data-sveltekit-reload
+							class="ml-2 px-3 py-1 bg-[#c41e3a] hover:bg-[#ff4444] text-white text-sm font-bold rounded transition-all uppercase tracking-wide"
+						>
+							Logout
+						</a>
+					</div>
+				</div>
 			</div>
 			
 			<div class="text-center">

@@ -38,7 +38,11 @@ export const load = async ({ cookies }: { cookies: any }) => {
 			ships,
 			nations,
 			tiers,
-			types
+			types,
+			user: {
+				nickname: session.nickname,
+				accountId: session.accountId
+			}
 		};
 	} catch (error) {
 		console.error('Error loading ships:', error);
