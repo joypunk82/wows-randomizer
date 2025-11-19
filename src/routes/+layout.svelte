@@ -4,8 +4,8 @@
 	
 	let { children } = $props();
 	
-	// Inject Vercel Analytics
-	injectAnalytics();
+	// Inject Vercel Analytics with debug mode
+	injectAnalytics({ mode: 'production' });
 </script>
 
 <svelte:head>
