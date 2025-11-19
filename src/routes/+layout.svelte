@@ -1,11 +1,11 @@
 <script lang="ts">
 	import './layout.css';
-	import { inject } from '@vercel/analytics';
+	import { injectAnalytics } from '@vercel/analytics/sveltekit';
 	
 	let { children } = $props();
 	
 	// Inject Vercel Analytics
-	inject();
+	injectAnalytics();
 </script>
 
 <svelte:head>
