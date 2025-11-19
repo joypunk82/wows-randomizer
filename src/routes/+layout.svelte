@@ -7,6 +7,7 @@
 <svelte:head>
 	<title>WoWS Randomizer - Random Ship Selector</title>
 	<meta name="description" content="Can't decide which ship to play in World of Warships? Let fate decide with WoWS Randomizer!" />
+	<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
 </svelte:head>
 
 <div class="min-h-screen">
