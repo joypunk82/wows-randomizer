@@ -1,11 +1,7 @@
 <script lang="ts">
 	import './layout.css';
-	import { injectAnalytics } from '@vercel/analytics/sveltekit';
 	
 	let { children } = $props();
-	
-	// Inject Vercel Analytics with debug mode
-	injectAnalytics({ mode: 'production' });
 </script>
 
 <svelte:head>
