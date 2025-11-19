@@ -15,10 +15,13 @@
 	
 	let { data }: Props = $props();
 	
-	// Filter state
-	let selectedNation = $state('all');
-	let selectedTier = $state('all');
-	let selectedType = $state('all');
+	// Sidebar state
+	let sidebarOpen = $state(false);
+	
+	// Filter state - using Sets to store multiple selections
+	let selectedNations = $state<Set<string>>(new Set(data.nations));
+	let selectedTiers = $state<Set<string>>(new Set(data.tiers.map(t => t.toString())));
+	let selectedTypes = $state<Set<string>>(new Set(data.types));
 	
 	// Random ship state
 	let selectedShip = $state<WargamingShip | null>(null);
@@ -27,9 +30,9 @@
 	// Filtered ships
 	const filteredShips = $derived(() => {
 		return data.ships.filter(ship => {
-			if (selectedNation !== 'all' && ship.nation !== selectedNation) return false;
-			if (selectedTier !== 'all' && ship.tier !== parseInt(selectedTier)) return false;
-			if (selectedType !== 'all' && ship.type !== selectedType) return false;
+			if (selectedNations.size > 0 && !selectedNations.has(ship.nation)) return false;
+			if (selectedTiers.size > 0 && !selectedTiers.has(ship.tier.toString())) return false;
+			if (selectedTypes.size > 0 && !selectedTypes.has(ship.type)) return false;
 			return true;
 		});
 	});
@@ -79,62 +82,77 @@
 	}
 </script>
 
-<div class="min-h-screen bg-gray-50">
-	<div class="max-w-7xl mx-auto px-4 py-8">
-		<!-- Header -->
-		<div class="mb-8">
-			<h1 class="text-4xl font-bold text-gray-900 mb-2">Your Ships</h1>
-			<p class="text-gray-600">Filter your ships and roll the dice to select one randomly!</p>
-		</div>
-		
-		<!-- Filters -->
-		<div class="bg-white rounded-lg shadow-md p-6 mb-8">
-			<h2 class="text-xl font-bold text-gray-900 mb-4">Filters</h2>
-			<div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+<div class="min-h-screen">
+	<!-- Collapsible Sidebar -->
+	<div class="fixed inset-y-0 left-0 z-50 w-80 bg-gradient-to-br from-[#1a2942] to-[#2a3952] border-r-4 border-[#d4af37] shadow-2xl transform transition-transform duration-300 ease-in-out overflow-y-auto {sidebarOpen ? 'translate-x-0' : '-translate-x-full'}">
+		<div class="p-6">
+			<!-- Sidebar Header -->
+			<div class="flex items-center justify-between mb-6">
+				<h3 class="text-2xl font-bold text-[#d4af37] uppercase tracking-wide">Battle Parameters</h3>
+				<button
+					onclick={() => sidebarOpen = false}
+					class="text-[#7a8b99] hover:text-[#d4af37] transition-colors text-2xl"
+					aria-label="Close sidebar"
+				>
+					✕
+				</button>
+			</div>
+			
+			<!-- Filters -->
+			<div class="space-y-6">
 				<FilterSelect
 					label="Nation"
-					value={selectedNation}
-					onchange={(val) => { selectedNation = val; selectedShip = null; }}
-					options={[
-						{ value: 'all', label: 'All Nations' },
-						...data.nations.map(n => ({ 
-							value: n, 
-							label: nationNames[n] || n 
-						}))
-					]}
+					selectedValues={selectedNations}
+					onchange={(vals) => { selectedNations = vals; selectedShip = null; }}
+					options={data.nations.map(n => ({ 
+						value: n, 
+						label: nationNames[n] || n 
+					}))}
 				/>
 				
 				<FilterSelect
 					label="Tier"
-					value={selectedTier}
-					onchange={(val) => { selectedTier = val; selectedShip = null; }}
-					options={[
-						{ value: 'all', label: 'All Tiers' },
-						...data.tiers.map(t => ({ 
-							value: t.toString(), 
-							label: `Tier ${t}` 
-						}))
-					]}
+					selectedValues={selectedTiers}
+					onchange={(vals) => { selectedTiers = vals; selectedShip = null; }}
+					options={data.tiers.map(t => ({ 
+						value: t.toString(), 
+						label: `Tier ${t}` 
+					}))}
 				/>
 				
 				<FilterSelect
 					label="Type"
-					value={selectedType}
-					onchange={(val) => { selectedType = val; selectedShip = null; }}
-					options={[
-						{ value: 'all', label: 'All Types' },
-						...data.types.map(t => ({ 
-							value: t, 
-							label: formatType(t)
-						}))
-					]}
+					selectedValues={selectedTypes}
+					onchange={(vals) => { selectedTypes = vals; selectedShip = null; }}
+					options={data.types.map(t => ({ 
+						value: t, 
+						label: formatType(t)
+					}))}
 				/>
 			</div>
 			
-			<div class="mt-6 flex items-center justify-between">
-				<p class="text-gray-600">
-					Showing <span class="font-bold">{filteredShips().length}</span> of <span class="font-bold">{data.ships.length}</span> ships
-				</p>
+			<!-- Ship Count in Sidebar -->
+			<div class="mt-8 pt-6 border-t-2 border-[#d4af37]">
+				<div class="text-[#7a8b99] text-center">
+					<div class="text-[#d4af37] font-bold text-3xl">{filteredShips().length}</div>
+					<div class="text-sm mt-1">ships available</div>
+				</div>
+			</div>
+		</div>
+	</div>
+	
+	<div class="max-w-7xl mx-auto px-4 py-8">
+		<!-- Page Header with Filter Toggle -->
+		<div class="mb-6">
+			<div class="flex items-center justify-between mb-4">
+				<button
+					onclick={() => sidebarOpen = !sidebarOpen}
+					class="flex items-center gap-3 px-6 py-3 bg-gradient-to-r from-[#1a2942] to-[#2a3952] border-2 border-[#d4af37] rounded-lg hover:border-[#f4d03f] transition-all shadow-lg hover:shadow-xl"
+				>
+					<span class="text-[#d4af37] text-xl">☰</span>
+					<span class="text-[#d4af37] font-bold uppercase tracking-wide">Filters</span>
+					<span class="text-[#7a8b99] text-sm">({filteredShips().length} ships)</span>
+				</button>
 				
 				<DiceButton
 					onclick={rollDice}
@@ -142,22 +160,34 @@
 					rolling={isRolling}
 				/>
 			</div>
+			
+			<div class="text-center">
+				<h2 class="text-4xl font-bold text-[#d4af37] mb-2 tracking-wide uppercase" style="text-shadow: 2px 2px 4px rgba(0,0,0,0.8);">
+					Port: Your Fleet
+				</h2>
+				<p class="text-[#7a8b99] text-lg">Select your vessel and set sail, Captain!</p>
+			</div>
 		</div>
 		
 		<!-- Selected Ship -->
 		{#if selectedShip}
 			<div class="mb-8">
-				<h2 class="text-2xl font-bold text-gray-900 mb-4">🎉 Your Random Ship!</h2>
+				<div class="text-center mb-4">
+					<h3 class="text-3xl font-bold text-[#f4d03f] mb-2" style="text-shadow: 2px 2px 8px rgba(212,175,55,0.8);">
+						Your Mission Awaits
+					</h3>
+					<p class="text-[#7a8b99] text-lg">Deploy this vessel, Captain!</p>
+				</div>
 				<ShipCard ship={selectedShip} highlighted={true} />
 			</div>
 		{/if}
 		
 		<!-- Ships Grid -->
 		<div>
-			<h2 class="text-2xl font-bold text-gray-900 mb-4">All Ships</h2>
 			{#if filteredShips().length === 0}
-				<div class="bg-white rounded-lg shadow-md p-12 text-center">
-					<p class="text-gray-600 text-lg">No ships match your filters. Try adjusting them!</p>
+				<div class="bg-gradient-to-br from-[#1a2942] to-[#2a3952] rounded-lg border-2 border-[#c41e3a] shadow-xl p-12 text-center">
+					<p class="text-[#7a8b99] text-xl mb-2">No ships match your battle parameters</p>
+					<p class="text-[#7a8b99]">Adjust your filters to see available vessels</p>
 				</div>
 			{:else}
 				<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">

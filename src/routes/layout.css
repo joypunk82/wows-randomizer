@@ -1,1 +1,19 @@
 @import 'tailwindcss';
+
+:root {
+	--navy-dark: #0a1929;
+	--navy-medium: #1a2942;
+	--navy-light: #2a3952;
+	--ocean-blue: #1e4a7a;
+	--ocean-teal: #2d5f7f;
+	--gold-accent: #d4af37;
+	--gold-light: #f4d03f;
+	--steel-gray: #7a8b99;
+	--ship-red: #c41e3a;
+}
+
+body {
+	background: linear-gradient(135deg, var(--navy-dark) 0%, var(--ocean-blue) 50%, var(--ocean-teal) 100%);
+	background-attachment: fixed;
+	min-height: 100vh;
+}
