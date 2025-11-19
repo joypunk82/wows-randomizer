@@ -1,5 +1,6 @@
 <script lang="ts">
 	import './layout.css';
+	import { Analytics } from '@vercel/analytics/sveltekit';
 	
 	let { children } = $props();
 </script>
@@ -26,6 +27,9 @@
 	</header>
 	
 	{@render children()}
+	
+	<!-- Vercel Analytics -->
+	<Analytics />
 	
 	<!-- Naval Footer -->
 	<footer class="bg-[#0a1929] border-t-2 border-[#d4af37] mt-12 py-6">
