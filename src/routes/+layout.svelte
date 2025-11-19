@@ -1,8 +1,11 @@
 <script lang="ts">
 	import './layout.css';
-	import { Analytics } from '@vercel/analytics/sveltekit';
+	import { inject } from '@vercel/analytics';
 	
 	let { children } = $props();
+	
+	// Inject Vercel Analytics
+	inject();
 </script>
 
 <svelte:head>
@@ -27,9 +30,6 @@
 	</header>
 	
 	{@render children()}
-	
-	<!-- Vercel Analytics -->
-	<Analytics />
 	
 	<!-- Naval Footer -->
 	<footer class="bg-[#0a1929] border-t-2 border-[#d4af37] mt-12 py-6">
