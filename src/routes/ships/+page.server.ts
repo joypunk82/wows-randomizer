@@ -11,8 +11,8 @@ export const load = async ({ cookies }: { cookies: any }) => {
 	}
 	
 	try {
-		// Get player's ships
-		const playerShips = await getPlayerShips(session.accountId, session.accessToken);
+		// Get player's ships using the region from session
+		const playerShips = await getPlayerShips(session.accountId, session.accessToken, session.region);
 		
 		// Filter to only ships currently in the player's garage/port
 		const shipsInPort = playerShips.filter(ship => ship.private?.in_garage === true);
@@ -20,8 +20,8 @@ export const load = async ({ cookies }: { cookies: any }) => {
 		// Get ship IDs that the player currently owns
 		const playerShipIds = new Set(shipsInPort.map(ship => ship.ship_id));
 		
-		// Get ship details from encyclopedia
-		const shipsData = await getShipsEncyclopedia(Array.from(playerShipIds));
+		// Get ship details from encyclopedia using the region from session
+		const shipsData = await getShipsEncyclopedia(session.region, Array.from(playerShipIds));
 		
 		// Convert to array and filter out null/undefined values
 		// Also ensure we only include ships that the player actually owns

@@ -4,6 +4,7 @@ interface SessionData {
 	accessToken: string;
 	accountId: string;
 	nickname: string;
+	region: string;
 	expiresAt: number;
 }
 

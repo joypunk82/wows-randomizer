@@ -1,6 +1,4 @@
-import { WARGAMING_APP_ID, WARGAMING_REGION } from '$env/static/private';
-
-const API_BASE_URL = `https://api.worldofwarships.${WARGAMING_REGION}`;
+import { WARGAMING_APP_ID } from '$env/static/private';
 
 export interface WargamingShip {
 	ship_id: number;
@@ -27,7 +25,7 @@ export interface AccountShip {
 /**
  * Get the OAuth login URL
  */
-export function getLoginUrl(redirectUri: string): string {
+export function getLoginUrl(redirectUri: string, region: string): string {
 	const params = new URLSearchParams({
 		application_id: WARGAMING_APP_ID,
 		redirect_uri: redirectUri,
@@ -36,13 +34,13 @@ export function getLoginUrl(redirectUri: string): string {
 		// This is required by Wargaming's API to see which ships are in your port
 	});
 	
-	return `https://api.worldoftanks.${WARGAMING_REGION}/wot/auth/login/?${params.toString()}`;
+	return `https://api.worldoftanks.${region}/wot/auth/login/?${params.toString()}`;
 }
 
 /**
  * Exchange access token for account info
  */
-export async function getAccountInfo(accessToken: string): Promise<{
+export async function getAccountInfo(accessToken: string, region: string): Promise<{
 	account_id: string;
 	nickname: string;
 } | null> {
@@ -51,7 +49,8 @@ export async function getAccountInfo(accessToken: string): Promise<{
 		access_token: accessToken
 	});
 	
-	const response = await fetch(`${API_BASE_URL}/wows/account/info/?${params.toString()}`);
+	const apiBaseUrl = `https://api.worldofwarships.${region}`;
+	const response = await fetch(`${apiBaseUrl}/wows/account/info/?${params.toString()}`);
 	const data = await response.json();
 	
 	if (data.status === 'ok' && data.data) {
@@ -70,14 +69,15 @@ export async function getAccountInfo(accessToken: string): Promise<{
 /**
  * Get player's ships from their account
  */
-export async function getPlayerShips(accountId: string, accessToken: string): Promise<AccountShip[]> {
+export async function getPlayerShips(accountId: string, accessToken: string, region: string): Promise<AccountShip[]> {
 	const params = new URLSearchParams({
 		application_id: WARGAMING_APP_ID,
 		access_token: accessToken,
 		account_id: accountId
 	});
 	
-	const url = `${API_BASE_URL}/wows/ships/stats/?${params.toString()}`;
+	const apiBaseUrl = `https://api.worldofwarships.${region}`;
+	const url = `${apiBaseUrl}/wows/ships/stats/?${params.toString()}`;
 	
 	const response = await fetch(url);
 	const data = await response.json();
@@ -92,7 +92,8 @@ export async function getPlayerShips(accountId: string, accessToken: string): Pr
 /**
  * Get encyclopedia data for ships
  */
-export async function getShipsEncyclopedia(shipIds?: number[]): Promise<Record<string, WargamingShip>> {
+export async function getShipsEncyclopedia(region: string, shipIds?: number[]): Promise<Record<string, WargamingShip>> {
+	const apiBaseUrl = `https://api.worldofwarships.${region}`;
 	const params = new URLSearchParams({
 		application_id: WARGAMING_APP_ID,
 		fields: 'ship_id,name,tier,type,nation,is_premium,is_special'
@@ -100,7 +101,7 @@ export async function getShipsEncyclopedia(shipIds?: number[]): Promise<Record<s
 	
 	// If no ship IDs provided, fetch all (though this might be a lot of data)
 	if (!shipIds || shipIds.length === 0) {
-		const url = `${API_BASE_URL}/wows/encyclopedia/ships/?${params.toString()}`;
+		const url = `${apiBaseUrl}/wows/encyclopedia/ships/?${params.toString()}`;
 		
 		const response = await fetch(url);
 		const data = await response.json();
@@ -124,7 +125,7 @@ export async function getShipsEncyclopedia(shipIds?: number[]): Promise<Record<s
 			ship_id: batch.join(',')
 		});
 		
-		const url = `${API_BASE_URL}/wows/encyclopedia/ships/?${batchParams.toString()}`;
+		const url = `${apiBaseUrl}/wows/encyclopedia/ships/?${batchParams.toString()}`;
 		
 		const response = await fetch(url);
 		const data = await response.json();

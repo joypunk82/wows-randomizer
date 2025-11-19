@@ -13,11 +13,18 @@ export const load = async ({ url, cookies }: { url: URL; cookies: any }) => {
 		throw redirect(302, '/?error=login_failed');
 	}
 	
-	// Save session
+	// Get region from temporary cookie
+	const region = cookies.get('wows_region') || 'com';
+	
+	// Delete the temporary region cookie
+	cookies.delete('wows_region', { path: '/' });
+	
+	// Save session with region
 	saveSession(cookies, {
 		accessToken,
 		accountId,
 		nickname,
+		region,
 		expiresAt: parseInt(expiresAt) * 1000 // Convert to milliseconds
 	});
 	

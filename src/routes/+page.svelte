@@ -6,6 +6,7 @@
 	}
 	
 	let { data }: Props = $props();
+	let selectedRegion = $state('com');
 </script>
 
 <div class="min-h-screen flex items-center justify-center px-4 py-12">
@@ -66,13 +67,33 @@
 					</div>
 				</div>
 			{:else}
-				<a
-					href="/auth/login"
-					class="inline-block px-12 py-4 bg-gradient-to-r from-[#d4af37] via-[#f4d03f] to-[#d4af37] text-[#0a1929] font-black text-xl rounded-lg shadow-xl hover:shadow-2xl transition-all transform hover:scale-105 border-2 border-[#0a1929] uppercase tracking-wider"
-					style="text-shadow: 1px 1px 2px rgba(255,255,255,0.3);"
-				>
-					Sign in with Wargaming.net
-				</a>
+				<form method="POST" action="/auth/login" class="space-y-6">
+					<!-- Region Selection -->
+					<div class="max-w-md mx-auto">
+						<label for="region" class="block text-[#d4af37] font-bold mb-3 uppercase tracking-wide text-lg">
+							Select Your Region
+						</label>
+						<select
+							id="region"
+							name="region"
+							bind:value={selectedRegion}
+							class="w-full px-4 py-3 bg-[#1a2942] text-white border-2 border-[#2a3952] rounded-lg focus:border-[#d4af37] focus:outline-none font-medium text-lg"
+						>
+							<option value="com">North America</option>
+							<option value="eu">Europe</option>
+							<option value="asia">Asia</option>
+							<option value="ru">Russia/CIS</option>
+						</select>
+					</div>
+					
+					<button
+						type="submit"
+						class="px-12 py-4 bg-gradient-to-r from-[#d4af37] via-[#f4d03f] to-[#d4af37] text-[#0a1929] font-black text-xl rounded-lg shadow-xl hover:shadow-2xl transition-all transform hover:scale-105 border-2 border-[#0a1929] uppercase tracking-wider"
+						style="text-shadow: 1px 1px 2px rgba(255,255,255,0.3);"
+					>
+						Sign in with Wargaming.net
+					</button>
+				</form>
 			{/if}
 			
 			<!-- Footer Note -->
