@@ -84,11 +84,41 @@
 	function formatType(type: string): string {
 		return type.replace('AirCarrier', 'Aircraft Carrier');
 	}
+	
+	// Quick filter functions
+	function filterByType(type: string) {
+		selectedTypes = new Set([type]);
+		selectedShip = null;
+		sidebarOpen = true; // Open sidebar to show the applied filter
+	}
+	
+	function filterByTier(tier: number) {
+		selectedTiers = new Set([tier.toString()]);
+		selectedShip = null;
+		sidebarOpen = true;
+	}
+	
+	function filterByNation(nation: string) {
+		selectedNations = new Set([nation]);
+		selectedShip = null;
+		sidebarOpen = true;
+	}
+	
+	// Reset all filters to default (everything selected)
+	function resetAllFilters() {
+		selectedNations = new Set(data.nations);
+		selectedTiers = new Set(data.tiers.map(t => t.toString()));
+		selectedTypes = new Set(data.types);
+		selectedShip = null;
+	}
 </script>
 
 <div class="min-h-screen">
 	<!-- Collapsible Sidebar -->
-	<div class="fixed inset-y-0 left-0 z-50 w-80 bg-gradient-to-br from-[#1a2942] to-[#2a3952] border-r-4 border-[#d4af37] shadow-2xl transform transition-transform duration-300 ease-in-out overflow-y-auto {sidebarOpen ? 'translate-x-0' : '-translate-x-full'}">
+	<aside 
+		class="fixed inset-y-0 left-0 z-50 w-80 bg-gradient-to-br from-[#1a2942] to-[#2a3952] border-r-4 border-[#d4af37] shadow-2xl transform transition-transform duration-300 ease-in-out overflow-y-auto {sidebarOpen ? 'translate-x-0' : '-translate-x-full'}"
+		aria-label="Filter sidebar"
+	>
 		<div class="p-6">
 			<!-- Sidebar Header -->
 			<div class="flex items-center justify-between mb-6">
@@ -101,6 +131,14 @@
 					✕
 				</button>
 			</div>
+			
+			<!-- Reset All Button -->
+			<button
+				onclick={resetAllFilters}
+				class="w-full px-4 py-3 mb-6 bg-[#2a3952] hover:bg-[#1a2942] text-[#d4af37] hover:text-[#f4d03f] font-bold rounded-lg border-2 border-[#7a8b99] hover:border-[#d4af37] transition-all uppercase tracking-wide text-sm"
+			>
+				Reset All Filters
+			</button>
 			
 			<!-- Filters -->
 			<div class="space-y-6">
@@ -143,48 +181,59 @@
 				</div>
 			</div>
 		</div>
-	</div>
+	</aside>
+	
+	<!-- Overlay to close sidebar when clicking outside -->
+	{#if sidebarOpen}
+		<button 
+			class="fixed inset-0 z-40 cursor-default bg-transparent"
+			onclick={() => sidebarOpen = false}
+			aria-label="Close sidebar"
+			tabindex="-1"
+		></button>
+	{/if}
 	
 	<div class="max-w-7xl mx-auto px-4 py-8">
-		<!-- Page Header with Filter Toggle -->
-		<div class="mb-6">
-			<div class="flex items-center justify-between mb-4 gap-4 flex-wrap">
-				<button
-					onclick={() => sidebarOpen = !sidebarOpen}
-					class="flex items-center gap-3 px-6 py-3 bg-gradient-to-r from-[#1a2942] to-[#2a3952] border-2 border-[#d4af37] rounded-lg hover:border-[#f4d03f] transition-all shadow-lg hover:shadow-xl"
-				>
-					<span class="text-[#d4af37] text-xl">☰</span>
-					<span class="text-[#d4af37] font-bold uppercase tracking-wide">Filters</span>
-					<span class="text-[#7a8b99] text-sm">({filteredShips().length} ships)</span>
-				</button>
-				
-				<div class="flex items-center gap-4 flex-wrap">
-					<DiceButton
-						onclick={rollDice}
-						disabled={filteredShips().length === 0 || isRolling}
-						rolling={isRolling}
-					/>
-					
-					<!-- User Profile / Logout -->
-					<div class="flex items-center gap-3 px-6 py-3 bg-gradient-to-r from-[#1a2942] to-[#2a3952] border-2 border-[#2a3952] rounded-lg">
-						<span class="text-[#7a8b99] text-sm">Captain:</span>
-						<span class="text-[#d4af37] font-bold">{data.user.nickname}</span>
-						<a
-							href="/auth/logout"
-							data-sveltekit-reload
-							class="ml-2 px-3 py-1 bg-[#c41e3a] hover:bg-[#ff4444] text-white text-sm font-bold rounded transition-all uppercase tracking-wide"
-						>
-							Logout
-						</a>
-					</div>
-				</div>
-			</div>
+		<!-- Top Navigation Bar -->
+		<div class="flex items-center justify-between mb-8">
+			<!-- Filters Button - Left -->
+			<button
+				onclick={() => sidebarOpen = !sidebarOpen}
+				class="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-[#1a2942] to-[#2a3952] border-2 border-[#d4af37] rounded-lg hover:border-[#f4d03f] transition-all shadow-lg hover:shadow-xl"
+			>
+				<span class="text-[#d4af37] text-lg">☰</span>
+				<span class="text-[#d4af37] font-bold uppercase tracking-wide text-sm">Filters</span>
+				<span class="text-[#7a8b99] text-xs">({filteredShips().length})</span>
+			</button>
 			
-			<div class="text-center">
-				<h2 class="text-4xl font-bold text-[#d4af37] mb-2 tracking-wide uppercase" style="text-shadow: 2px 2px 4px rgba(0,0,0,0.8);">
-					Port: Your Fleet
-				</h2>
-				<p class="text-[#7a8b99] text-lg">Select your vessel and set sail, Captain!</p>
+			<!-- User Profile - Right -->
+			<div class="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-[#1a2942] to-[#2a3952] border-2 border-[#2a3952] rounded-lg">
+				<span class="text-[#7a8b99] text-xs">Captain:</span>
+				<span class="text-[#d4af37] font-bold text-sm">{data.user.nickname}</span>
+				<a
+					href="/auth/logout"
+					data-sveltekit-reload
+					class="ml-2 px-2 py-1 bg-[#c41e3a] hover:bg-[#ff4444] text-white text-xs font-bold rounded transition-all uppercase tracking-wide"
+				>
+					Logout
+				</a>
+			</div>
+		</div>
+		
+		<!-- Hero Section with Title and Deploy Button -->
+		<div class="text-center mb-8">
+			<h2 class="text-4xl font-bold text-[#d4af37] mb-2 tracking-wide uppercase" style="text-shadow: 2px 2px 4px rgba(0,0,0,0.8);">
+				Port: Your Fleet
+			</h2>
+			<p class="text-[#7a8b99] text-lg mb-6">Select your vessel and set sail, Captain!</p>
+			
+			<!-- Large Centered Deploy Button -->
+			<div class="flex justify-center">
+				<DiceButton
+					onclick={rollDice}
+					disabled={filteredShips().length === 0 || isRolling}
+					rolling={isRolling}
+				/>
 			</div>
 		</div>
 		
@@ -214,6 +263,9 @@
 						<ShipCard 
 							ship={ship} 
 							highlighted={selectedShip?.ship_id === ship.ship_id}
+							onFilterByType={filterByType}
+							onFilterByTier={filterByTier}
+							onFilterByNation={filterByNation}
 						/>
 					{/each}
 				</div>

@@ -5,9 +5,12 @@
 		ship: WargamingShip;
 		onClick?: () => void;
 		highlighted?: boolean;
+		onFilterByType?: (type: string) => void;
+		onFilterByTier?: (tier: number) => void;
+		onFilterByNation?: (nation: string) => void;
 	}
 	
-	let { ship, onClick, highlighted = false }: Props = $props();
+	let { ship, onClick, highlighted = false, onFilterByType, onFilterByTier, onFilterByNation }: Props = $props();
 	
 	const typeColors: Record<string, string> = {
 		'Destroyer': 'bg-[#c41e3a] text-white border-[#c41e3a]',
@@ -36,8 +39,7 @@
 	const typeDisplay = ship.type.replace('AirCarrier', 'Aircraft Carrier');
 </script>
 
-<button
-	onclick={onClick}
+<div
 	class="block w-full text-left p-5 rounded-lg border-2 transition-all hover:shadow-2xl {highlighted
 		? 'border-[#f4d03f] bg-gradient-to-br from-[#d4af37] to-[#f4d03f] shadow-2xl scale-105'
 		: 'border-[#2a3952] bg-gradient-to-br from-[#1a2942] to-[#2a3952] hover:border-[#d4af37]'}"
@@ -59,14 +61,38 @@
 	</div>
 	
 	<div class="flex gap-2 flex-wrap">
-		<span class="px-3 py-1.5 text-xs font-bold rounded border-2 {highlighted ? 'bg-[#0a1929] text-[#f4d03f] border-[#0a1929]' : typeColors[ship.type] || 'bg-[#2a3952] text-[#7a8b99] border-[#7a8b99]'}">
+		<button
+			type="button"
+			onclick={(e) => {
+				e.stopPropagation();
+				onFilterByType?.(ship.type);
+			}}
+			class="px-3 py-1.5 text-xs font-bold rounded border-2 transition-all hover:scale-105 {highlighted ? 'bg-[#0a1929] text-[#f4d03f] border-[#0a1929]' : typeColors[ship.type] || 'bg-[#2a3952] text-[#7a8b99] border-[#7a8b99]'}"
+			title="Filter by ship type"
+		>
 			{typeDisplay}
-		</span>
-		<span class="px-3 py-1.5 text-xs font-bold rounded border-2 {highlighted ? 'bg-[#0a1929] text-[#f4d03f] border-[#0a1929]' : 'bg-[#1a2942] text-[#d4af37] border-[#d4af37]'}">
+		</button>
+		<button
+			type="button"
+			onclick={(e) => {
+				e.stopPropagation();
+				onFilterByTier?.(ship.tier);
+			}}
+			class="px-3 py-1.5 text-xs font-bold rounded border-2 transition-all hover:scale-105 {highlighted ? 'bg-[#0a1929] text-[#f4d03f] border-[#0a1929]' : 'bg-[#1a2942] text-[#d4af37] border-[#d4af37]'}"
+			title="Filter by tier"
+		>
 			TIER {ship.tier}
-		</span>
-		<span class="px-3 py-1.5 text-xs font-bold rounded border-2 {highlighted ? 'bg-[#0a1929] text-[#f4d03f] border-[#0a1929]' : 'bg-[#2a3952] text-[#7a8b99] border-[#7a8b99]'}">
+		</button>
+		<button
+			type="button"
+			onclick={(e) => {
+				e.stopPropagation();
+				onFilterByNation?.(ship.nation);
+			}}
+			class="px-3 py-1.5 text-xs font-bold rounded border-2 transition-all hover:scale-105 {highlighted ? 'bg-[#0a1929] text-[#f4d03f] border-[#0a1929]' : 'bg-[#2a3952] text-[#7a8b99] border-[#7a8b99]'}"
+			title="Filter by nation"
+		>
 			{nationNames[ship.nation] || ship.nation}
-		</span>
+		</button>
 	</div>
-</button>
+</div>
