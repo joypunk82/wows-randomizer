@@ -26,6 +26,16 @@
 	function clearAll() {
 		onchange(new Set());
 	}
+	
+	// Split options into two columns for vertical layout
+	function splitIntoColumns(items: typeof options) {
+		const mid = Math.ceil(items.length / 2);
+		const leftColumn = items.slice(0, mid);
+		const rightColumn = items.slice(mid);
+		return { leftColumn, rightColumn };
+	}
+	
+	const { leftColumn, rightColumn } = $derived(splitIntoColumns(options));
 </script>
 
 <div class="flex flex-col gap-3">
@@ -49,20 +59,40 @@
 		</div>
 	</div>
 	<div class="bg-[#0a1929] border-2 border-[#2a3952] rounded-lg p-3 shadow-inner">
-		<div class="grid grid-cols-1 gap-1">
-			{#each options as option}
-				<label class="flex items-center gap-3 py-2 px-3 hover:bg-[#1a2942] rounded cursor-pointer transition-colors group">
-					<input
-						type="checkbox"
-						checked={selectedValues.has(option.value)}
-						onchange={() => toggleValue(option.value)}
-						class="w-4 h-4 text-[#d4af37] bg-[#1a2942] border-2 border-[#7a8b99] rounded focus:ring-2 focus:ring-[#d4af37] cursor-pointer"
-					/>
-					<span class="text-sm text-[#7a8b99] group-hover:text-[#d4af37] transition-colors font-medium">
-						{option.label}
-					</span>
-				</label>
-			{/each}
+		<div class="grid grid-cols-2 gap-x-1">
+			<!-- Left Column -->
+			<div class="flex flex-col gap-1">
+				{#each leftColumn as option}
+					<label class="flex items-center gap-2 py-1.5 px-2 hover:bg-[#1a2942] rounded cursor-pointer transition-colors group">
+						<input
+							type="checkbox"
+							checked={selectedValues.has(option.value)}
+							onchange={() => toggleValue(option.value)}
+							class="w-4 h-4 text-[#d4af37] bg-[#1a2942] border-2 border-[#7a8b99] rounded focus:ring-2 focus:ring-[#d4af37] cursor-pointer flex-shrink-0"
+						/>
+						<span class="text-xs text-[#7a8b99] group-hover:text-[#d4af37] transition-colors font-medium">
+							{option.label}
+						</span>
+					</label>
+				{/each}
+			</div>
+			
+			<!-- Right Column -->
+			<div class="flex flex-col gap-1">
+				{#each rightColumn as option}
+					<label class="flex items-center gap-2 py-1.5 px-2 hover:bg-[#1a2942] rounded cursor-pointer transition-colors group">
+						<input
+							type="checkbox"
+							checked={selectedValues.has(option.value)}
+							onchange={() => toggleValue(option.value)}
+							class="w-4 h-4 text-[#d4af37] bg-[#1a2942] border-2 border-[#7a8b99] rounded focus:ring-2 focus:ring-[#d4af37] cursor-pointer flex-shrink-0"
+						/>
+						<span class="text-xs text-[#7a8b99] group-hover:text-[#d4af37] transition-colors font-medium">
+							{option.label}
+						</span>
+					</label>
+				{/each}
+			</div>
 		</div>
 	</div>
 </div>

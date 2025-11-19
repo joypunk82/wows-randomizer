@@ -48,13 +48,21 @@
 		<h3 class="font-bold text-xl {highlighted ? 'text-[#0a1929]' : 'text-[#d4af37]'}">{ship.name}</h3>
 		<div class="flex gap-2">
 			{#if ship.is_premium}
-				<span class="px-2 py-1 text-xs font-bold rounded bg-gradient-to-r from-[#d4af37] to-[#f4d03f] text-[#0a1929] shadow-md">
-					⭐ PREMIUM
+				<span 
+					class="px-2 py-1 text-xs font-bold rounded bg-gradient-to-r from-[#d4af37] to-[#f4d03f] text-[#0a1929] shadow-md transition-all group hover:px-3"
+					title="Premium Ship"
+				>
+					<span class="inline">⭐</span>
+					<span class="hidden group-hover:inline ml-1">PREMIUM</span>
 				</span>
 			{/if}
 			{#if ship.is_special}
-				<span class="px-2 py-1 text-xs font-bold rounded bg-gradient-to-r from-[#c41e3a] to-[#ff4444] text-white shadow-md">
-					✨ SPECIAL
+				<span 
+					class="px-2 py-1 text-xs font-bold rounded bg-gradient-to-r from-[#c41e3a] to-[#ff4444] text-white shadow-md transition-all group hover:px-3"
+					title="Special Ship"
+				>
+					<span class="inline">✨</span>
+					<span class="hidden group-hover:inline ml-1">SPECIAL</span>
 				</span>
 			{/if}
 		</div>
