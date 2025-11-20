@@ -8,10 +8,43 @@
 		onFilterByType?: (type: string) => void;
 		onFilterByTier?: (tier: number) => void;
 		onFilterByNation?: (nation: string) => void;
+		onFilterByCategory?: (category: string) => void;
 		onViewStats?: (ship: WargamingShip) => void;
+		isFavorite?: boolean;
+		isBlacklisted?: boolean;
+		onToggleFavorite?: (shipId: number) => void;
+		onToggleBlacklist?: (shipId: number) => void;
 	}
 	
-	let { ship, onClick, highlighted = false, onFilterByType, onFilterByTier, onFilterByNation, onViewStats }: Props = $props();
+	let { ship, onClick, highlighted = false, onFilterByType, onFilterByTier, onFilterByNation, onFilterByCategory, onViewStats, isFavorite = false, isBlacklisted = false, onToggleFavorite, onToggleBlacklist }: Props = $props();
+	
+	// Context menu state
+	let showContextMenu = $state(false);
+	let contextMenuX = $state(0);
+	let contextMenuY = $state(0);
+	
+	function handleContextMenu(e: MouseEvent) {
+		e.preventDefault();
+		contextMenuX = e.clientX;
+		contextMenuY = e.clientY;
+		showContextMenu = true;
+	}
+	
+	function closeContextMenu() {
+		showContextMenu = false;
+	}
+	
+	function handleFavoriteClick(e: MouseEvent) {
+		e.stopPropagation();
+		onToggleFavorite?.(ship.ship_id);
+		closeContextMenu();
+	}
+	
+	function handleBlacklistClick(e: MouseEvent) {
+		e.stopPropagation();
+		onToggleBlacklist?.(ship.ship_id);
+		closeContextMenu();
+	}
 	
 	const typeColors: Record<string, string> = {
 		'Destroyer': 'bg-[#c41e3a] text-white border-[#c41e3a]',
@@ -56,11 +89,22 @@
 </script>
 
 <div
-	class="block w-full text-left p-5 rounded-lg border-2 transition-all hover:shadow-2xl {highlighted
+	class="block w-full text-left p-5 rounded-lg border-2 transition-all hover:shadow-2xl relative {highlighted
 		? 'border-[#f4d03f] bg-gradient-to-br from-[#d4af37] to-[#f4d03f] shadow-2xl scale-105'
-		: 'border-[#2a3952] bg-gradient-to-br from-[#1a2942] to-[#2a3952] hover:border-[#d4af37]'}"
+		: isBlacklisted
+			? 'border-[#c41e3a] bg-gradient-to-br from-[#1a1a1a] to-[#2a2a2a] opacity-50 hover:opacity-60'
+			: 'border-[#2a3952] bg-gradient-to-br from-[#1a2942] to-[#2a3952] hover:border-[#d4af37]'}"
+	oncontextmenu={handleContextMenu}
+	role="article"
 >
-	<div class="flex justify-between items-start mb-3">
+	{#if isFavorite}
+		<div class="absolute top-0 right-0 w-0 h-0 border-t-[50px] border-t-[#00CED1] border-l-[50px] border-l-transparent shadow-lg" style="filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));" title="Favorite"></div>
+	{/if}
+	{#if isBlacklisted}
+		<div class="absolute top-0 right-0 w-0 h-0 border-t-[50px] border-t-[#c41e3a] border-l-[50px] border-l-transparent shadow-lg" style="filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));" title="Blacklisted"></div>
+	{/if}
+	
+	<div class="mb-3">
 		<button
 			type="button"
 			onclick={(e) => {
@@ -72,26 +116,6 @@
 		>
 			{ship.name}
 		</button>
-		<div class="flex gap-2">
-			{#if ship.is_premium}
-				<span 
-					class="px-2 py-1 text-xs font-bold rounded bg-gradient-to-r from-[#d4af37] to-[#f4d03f] text-[#0a1929] shadow-md transition-all group hover:px-3"
-					title="Premium Ship"
-				>
-					<span class="inline">⭐</span>
-					<span class="hidden group-hover:inline ml-1">PREMIUM</span>
-				</span>
-			{/if}
-			{#if ship.is_special}
-				<span 
-					class="px-2 py-1 text-xs font-bold rounded bg-gradient-to-r from-[#c41e3a] to-[#ff4444] text-white shadow-md transition-all group hover:px-3"
-					title="Special Ship"
-				>
-					<span class="inline">✨</span>
-					<span class="hidden group-hover:inline ml-1">SPECIAL</span>
-				</span>
-			{/if}
-		</div>
 	</div>
 	
 	<div class="flex gap-2 flex-wrap">
@@ -128,6 +152,32 @@
 		>
 			{nationNames[ship.nation] || ship.nation}
 		</button>
+		{#if ship.is_premium}
+			<button
+				type="button"
+				onclick={(e) => {
+					e.stopPropagation();
+					onFilterByCategory?.('premium');
+				}}
+				class="px-3 py-1.5 text-xs font-bold rounded border-2 transition-all hover:scale-105 {highlighted ? 'bg-[#0a1929] text-[#f4d03f] border-[#0a1929]' : 'bg-gradient-to-r from-[#d4af37] to-[#f4d03f] text-[#0a1929] border-[#d4af37]'}"
+				title="Filter by premium ships"
+			>
+				PREMIUM
+			</button>
+		{/if}
+		{#if ship.is_special}
+			<button
+				type="button"
+				onclick={(e) => {
+					e.stopPropagation();
+					onFilterByCategory?.('special');
+				}}
+				class="px-3 py-1.5 text-xs font-bold rounded border-2 transition-all hover:scale-105 {highlighted ? 'bg-[#0a1929] text-[#f4d03f] border-[#0a1929]' : 'bg-gradient-to-r from-[#c41e3a] to-[#ff4444] text-white border-[#c41e3a]'}"
+				title="Filter by special ships"
+			>
+				SPECIAL
+			</button>
+		{/if}
 	</div>
 	
 	{#if highlighted && ship.battles}
@@ -176,3 +226,36 @@
 		</div>
 	{/if}
 </div>
+
+<!-- Context Menu -->
+{#if showContextMenu}
+	<div 
+		class="fixed inset-0 z-40"
+		onclick={closeContextMenu}
+		onkeydown={(e) => e.key === 'Escape' && closeContextMenu()}
+		role="button"
+		tabindex="-1"
+		aria-label="Close context menu"
+	></div>
+	<div 
+		class="fixed z-50 bg-[#1a2942] border-2 border-[#d4af37] rounded-lg shadow-2xl py-2 min-w-[200px]"
+		style="left: {contextMenuX}px; top: {contextMenuY}px;"
+	>
+		<button
+			type="button"
+			onclick={handleFavoriteClick}
+			class="w-full px-4 py-2 text-left hover:bg-[#2a3952] transition-colors text-[#d4af37] flex items-center gap-2"
+		>
+			<span class="text-lg">{isFavorite ? '★' : '☆'}</span>
+			<span>{isFavorite ? 'Remove from' : 'Add to'} Favorites</span>
+		</button>
+		<button
+			type="button"
+			onclick={handleBlacklistClick}
+			class="w-full px-4 py-2 text-left hover:bg-[#2a3952] transition-colors text-[#7a8b99] flex items-center gap-2"
+		>
+			<span class="text-lg">{isBlacklisted ? '✓' : '🚫'}</span>
+			<span>{isBlacklisted ? 'Remove from' : 'Add to'} Blacklist</span>
+		</button>
+	</div>
+{/if}

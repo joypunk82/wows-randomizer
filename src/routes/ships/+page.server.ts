@@ -1,6 +1,7 @@
 import { redirect } from '@sveltejs/kit';
 import { getSession } from '$lib/server/session';
 import { getPlayerShips, getShipsEncyclopedia, type WargamingShip } from '$lib/server/wargaming';
+import { getFavorites, getBlacklist } from '$lib/server/preferences';
 
 export const load = async ({ cookies }: { cookies: any }) => {
 	const session = getSession(cookies);
@@ -50,11 +51,17 @@ export const load = async ({ cookies }: { cookies: any }) => {
 		const tiers = [...new Set(ships.map(s => s.tier))].sort((a, b) => a - b);
 		const types = [...new Set(ships.map(s => s.type))].sort();
 		
+		// Get user preferences
+		const favorites = await getFavorites(session.accountId);
+		const blacklist = await getBlacklist(session.accountId);
+		
 		return {
 			ships,
 			nations,
 			tiers,
 			types,
+			favorites,
+			blacklist,
 			user: {
 				nickname: session.nickname,
 				accountId: session.accountId

@@ -148,28 +148,28 @@ function parseTiers(query: string): string[] {
 function parseTypes(query: string): string[] {
 	const types: string[] = [];
 	
-	// Battleship patterns
-	if (/battleship|battle\s*ship|bb/i.test(query)) {
+	// Battleship patterns - use word boundaries
+	if (/\b(battleship|battle\s*ship|bb)\b/i.test(query)) {
 		types.push('Battleship');
 	}
 	
 	// Cruiser patterns
-	if (/cruiser|ca|cl/i.test(query)) {
+	if (/\b(cruiser|ca|cl)\b/i.test(query)) {
 		types.push('Cruiser');
 	}
 	
 	// Destroyer patterns
-	if (/destroyer|dd/i.test(query)) {
+	if (/\b(destroyer|dd)\b/i.test(query)) {
 		types.push('Destroyer');
 	}
 	
 	// Carrier patterns
-	if (/carrier|aircraft\s*carrier|cv/i.test(query)) {
+	if (/\b(carrier|aircraft\s*carrier|cv)\b/i.test(query)) {
 		types.push('AirCarrier');
 	}
 	
-	// Submarine patterns
-	if (/submarine|sub|ss/i.test(query)) {
+	// Submarine patterns - use word boundaries to avoid matching "ss" in ship names like "Missouri"
+	if (/\b(submarine|sub)\b/i.test(query) || /\bss\b/i.test(query)) {
 		types.push('Submarine');
 	}
 	
@@ -253,8 +253,10 @@ function extractShipName(query: string): string {
 	cleaned = cleaned.replace(/\bt(\d+)\b/gi, '');
 	cleaned = cleaned.replace(/\bsuper\s*ship\b/gi, '');
 	
-	// Remove type keywords
-	cleaned = cleaned.replace(/\b(battleship|battle\s*ship|cruiser|destroyer|carrier|aircraft\s*carrier|submarine|sub|bb|ca|cl|dd|cv|ss)\b/gi, '');
+	// Remove type keywords (with word boundaries)
+	cleaned = cleaned.replace(/\b(battleship|battle\s*ship|cruiser|destroyer|carrier|aircraft\s*carrier|submarine|sub)\b/gi, '');
+	// Handle abbreviated ship types separately with strict word boundaries
+	cleaned = cleaned.replace(/\b(bb|ca|cl|dd|cv|ss)\b/gi, '');
 	
 	// Remove nation keywords
 	const nationKeywords = [

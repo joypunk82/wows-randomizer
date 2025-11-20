@@ -13,6 +13,8 @@
 			nations: string[];
 			tiers: number[];
 			types: string[];
+			favorites: number[];
+			blacklist: number[];
 			user: {
 				nickname: string;
 				accountId: string;
@@ -21,6 +23,11 @@
 	}
 	
 	let { data }: Props = $props();
+	
+	// Preferences state
+	let favorites = $state<Set<number>>(new Set(data.favorites));
+	let blacklist = $state<Set<number>>(new Set(data.blacklist));
+	let showFavoritesOnly = $state(false);
 	
 	// Sidebar state
 	let sidebarOpen = $state(false);
@@ -42,27 +49,42 @@
 	// Modal state
 	let statsModalShip = $state<WargamingShip | null>(null);
 	
-	// Filtered ships
+	// Filtered ships - separated into active and blacklisted
 	const filteredShips = $derived(() => {
-		return data.ships.filter(ship => {
+		const active: WargamingShip[] = [];
+		const blacklisted: WargamingShip[] = [];
+		
+		data.ships.forEach(ship => {
+			// Apply filters (except blacklist)
+			// Filter by favorites only if enabled
+			if (showFavoritesOnly && !favorites.has(ship.ship_id)) return;
+			
 			// Filter by checkboxes
-			if (selectedNations.size > 0 && !selectedNations.has(ship.nation)) return false;
-			if (selectedTiers.size > 0 && !selectedTiers.has(ship.tier.toString())) return false;
-			if (selectedTypes.size > 0 && !selectedTypes.has(ship.type)) return false;
+			if (selectedNations.size > 0 && !selectedNations.has(ship.nation)) return;
+			if (selectedTiers.size > 0 && !selectedTiers.has(ship.tier.toString())) return;
+			if (selectedTypes.size > 0 && !selectedTypes.has(ship.type)) return;
 			
 			// Filter by category (premium/special/tech tree)
 			if (selectedCategories.size > 0) {
 				const shipCategory = ship.is_special ? 'special' : (ship.is_premium ? 'premium' : 'tech_tree');
-				if (!selectedCategories.has(shipCategory)) return false;
+				if (!selectedCategories.has(shipCategory)) return;
 			}
 			
 			// Filter by ship name search
 			if (searchShipName && !ship.name.toLowerCase().includes(searchShipName.toLowerCase())) {
-				return false;
+				return;
 			}
 			
-			return true;
+			// Separate blacklisted ships
+			if (blacklist.has(ship.ship_id)) {
+				blacklisted.push(ship);
+			} else {
+				active.push(ship);
+			}
 		});
+		
+		// Return active ships followed by blacklisted ships
+		return [...active, ...blacklisted];
 	});
 	
 	// Handle search query changes
@@ -101,6 +123,73 @@
 		
 		// Clear selected ship when search changes
 		selectedShip = null;
+	}
+	
+	// Preference management functions
+	async function saveFavorites() {
+		try {
+			await fetch('/api/preferences/favorites', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ favorites: Array.from(favorites) })
+			});
+		} catch (error) {
+			console.error('Failed to save favorites:', error);
+		}
+	}
+	
+	async function saveBlacklist() {
+		try {
+			await fetch('/api/preferences/blacklist', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ blacklist: Array.from(blacklist) })
+			});
+		} catch (error) {
+			console.error('Failed to save blacklist:', error);
+		}
+	}
+	
+	async function toggleFavorite(shipId: number) {
+		if (favorites.has(shipId)) {
+			favorites.delete(shipId);
+		} else {
+			favorites.add(shipId);
+			// Remove from blacklist if it was there
+			if (blacklist.has(shipId)) {
+				blacklist.delete(shipId);
+				await saveBlacklist();
+			}
+		}
+		await saveFavorites();
+	}
+	
+	async function toggleBlacklist(shipId: number) {
+		if (blacklist.has(shipId)) {
+			blacklist.delete(shipId);
+		} else {
+			blacklist.add(shipId);
+			// Remove from favorites if it was there
+			if (favorites.has(shipId)) {
+				favorites.delete(shipId);
+				await saveFavorites();
+			}
+		}
+		await saveBlacklist();
+	}
+	
+	async function clearFavorites() {
+		if (confirm('Are you sure you want to clear all favorites?')) {
+			favorites.clear();
+			await saveFavorites();
+		}
+	}
+	
+	async function clearBlacklist() {
+		if (confirm('Are you sure you want to clear all blacklisted ships?')) {
+			blacklist.clear();
+			await saveBlacklist();
+		}
 	}
 	
 	// Nation names and flags for display
@@ -196,6 +285,12 @@
 	
 	function filterByNation(nation: string) {
 		selectedNations = new Set([nation]);
+		selectedShip = null;
+		sidebarOpen = true;
+	}
+	
+	function filterByCategory(category: string) {
+		selectedCategories = new Set([category]);
 		selectedShip = null;
 		sidebarOpen = true;
 	}
@@ -301,6 +396,20 @@
 					onchange={(vals) => { selectedCategories = vals; selectedShip = null; }}
 					options={categoryOptions}
 				/>
+				
+				<!-- Favorites Only Toggle -->
+				<div class="mt-6">
+					<button
+						onclick={() => { showFavoritesOnly = !showFavoritesOnly; selectedShip = null; }}
+						class="w-full px-4 py-3 bg-gradient-to-r {showFavoritesOnly ? 'from-[#d4af37] to-[#f4d03f] text-[#0a1929]' : 'from-[#2a3952] to-[#1a2942] text-[#7a8b99]'} hover:brightness-110 font-bold rounded-lg border-2 border-[#d4af37] transition-all text-sm flex items-center justify-between"
+					>
+						<span class="flex items-center gap-2">
+							<span class="text-lg">⭐</span>
+							<span>Favorites Only</span>
+						</span>
+						<span class="text-xs opacity-75">{favorites.size}</span>
+					</button>
+				</div>
 			</div>
 			
 			<!-- Ship Count in Sidebar -->
@@ -308,6 +417,48 @@
 				<div class="text-[#7a8b99] text-center">
 					<div class="text-[#d4af37] font-bold text-3xl">{filteredShips().length}</div>
 					<div class="text-sm mt-1">ships available</div>
+				</div>
+			</div>
+			
+			<!-- Favorites & Blacklist Management -->
+			<div class="mt-6 space-y-4">
+				
+				<!-- Favorites Count & Clear -->
+				<div class="bg-[#1a2942] rounded-lg p-3 border border-[#d4af37]/30">
+					<div class="flex items-center justify-between mb-2">
+						<span class="text-[#d4af37] text-sm font-semibold flex items-center gap-2">
+							<span>⭐</span>
+							<span>FAVORITES</span>
+						</span>
+						<span class="text-[#7a8b99] text-lg font-bold">{favorites.size}</span>
+					</div>
+					{#if favorites.size > 0}
+						<button
+							onclick={clearFavorites}
+							class="w-full px-3 py-1.5 bg-[#2a3952] hover:bg-[#c41e3a] text-[#7a8b99] hover:text-white font-semibold rounded text-xs transition-all"
+						>
+							Clear All
+						</button>
+					{/if}
+				</div>
+				
+				<!-- Blacklist Count & Clear -->
+				<div class="bg-[#1a2942] rounded-lg p-3 border border-[#c41e3a]/30">
+					<div class="flex items-center justify-between mb-2">
+						<span class="text-[#c41e3a] text-sm font-semibold flex items-center gap-2">
+							<span>🚫</span>
+							<span>BLACKLIST</span>
+						</span>
+						<span class="text-[#7a8b99] text-lg font-bold">{blacklist.size}</span>
+					</div>
+					{#if blacklist.size > 0}
+						<button
+							onclick={clearBlacklist}
+							class="w-full px-3 py-1.5 bg-[#2a3952] hover:bg-[#c41e3a] text-[#7a8b99] hover:text-white font-semibold rounded text-xs transition-all"
+						>
+							Clear All
+						</button>
+					{/if}
 				</div>
 			</div>
 		</div>
@@ -380,6 +531,11 @@
 					ship={selectedShip} 
 					highlighted={true}
 					onViewStats={handleViewStats}
+					onFilterByCategory={filterByCategory}
+					isFavorite={favorites.has(selectedShip.ship_id)}
+					isBlacklisted={blacklist.has(selectedShip.ship_id)}
+					onToggleFavorite={toggleFavorite}
+					onToggleBlacklist={toggleBlacklist}
 				/>
 			</div>
 		{/if}
@@ -400,7 +556,12 @@
 							onFilterByType={filterByType}
 							onFilterByTier={filterByTier}
 							onFilterByNation={filterByNation}
+							onFilterByCategory={filterByCategory}
 							onViewStats={handleViewStats}
+							isFavorite={favorites.has(ship.ship_id)}
+							isBlacklisted={blacklist.has(ship.ship_id)}
+							onToggleFavorite={toggleFavorite}
+							onToggleBlacklist={toggleBlacklist}
 						/>
 					{/each}
 				</div>
