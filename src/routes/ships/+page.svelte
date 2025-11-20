@@ -541,6 +541,7 @@
 				<ShipCard 
 					ship={selectedShip} 
 					highlighted={true}
+					showStats={true}
 					onViewStats={handleViewStats}
 					onFilterByCategory={filterByCategory}
 					isFavorite={favorites.has(selectedShip.ship_id)}

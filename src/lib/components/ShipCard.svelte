@@ -5,6 +5,7 @@
 		ship: WargamingShip;
 		onClick?: () => void;
 		highlighted?: boolean;
+		showStats?: boolean;
 		onFilterByType?: (type: string) => void;
 		onFilterByTier?: (tier: number) => void;
 		onFilterByNation?: (nation: string) => void;
@@ -16,7 +17,7 @@
 		onToggleBlacklist?: (shipId: number) => void;
 	}
 	
-	let { ship, onClick, highlighted = false, onFilterByType, onFilterByTier, onFilterByNation, onFilterByCategory, onViewStats, isFavorite = false, isBlacklisted = false, onToggleFavorite, onToggleBlacklist }: Props = $props();
+	let { ship, onClick, highlighted = false, showStats = false, onFilterByType, onFilterByTier, onFilterByNation, onFilterByCategory, onViewStats, isFavorite = false, isBlacklisted = false, onToggleFavorite, onToggleBlacklist }: Props = $props();
 	
 	// Context menu state
 	let showContextMenu = $state(false);
@@ -180,7 +181,7 @@
 		{/if}
 	</div>
 	
-	{#if highlighted && ship.battles}
+	{#if showStats && ship.battles}
 		<div class="mt-4 pt-4 border-t border-[#0a1929]/30">
 			<div class="grid grid-cols-3 gap-4 text-sm">
 				<div class="text-[#0a1929]">
