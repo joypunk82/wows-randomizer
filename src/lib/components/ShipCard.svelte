@@ -71,22 +71,23 @@
 		'spain': 'Spain'
 	};
 	
-	const typeDisplay = ship.type.replace('AirCarrier', 'Aircraft Carrier');
+	// Reactive calculations that update when ship changes
+	const typeDisplay = $derived(ship.type.replace('AirCarrier', 'Aircraft Carrier'));
 	
-	// Calculate stats for display
-	const winRate = ship.battles && ship.wins ? ((ship.wins / ship.battles) * 100).toFixed(1) : null;
-	const avgDamage = ship.battles && ship.damage_dealt ? Math.round(ship.damage_dealt / ship.battles) : null;
-	const survivalRate = ship.battles && ship.survived_battles ? ((ship.survived_battles / ship.battles) * 100).toFixed(1) : null;
-	const avgXp = ship.battles && ship.xp ? Math.round(ship.xp / ship.battles) : null;
-	const avgFrags = ship.battles && ship.frags ? (ship.frags / ship.battles).toFixed(2) : null;
-	const lastBattle = ship.last_battle_time ? new Date(ship.last_battle_time * 1000).toLocaleString('en-US', {
+	// Calculate stats for display - using $derived to make them reactive
+	const winRate = $derived(ship.battles && ship.wins ? ((ship.wins / ship.battles) * 100).toFixed(1) : null);
+	const avgDamage = $derived(ship.battles && ship.damage_dealt ? Math.round(ship.damage_dealt / ship.battles) : null);
+	const survivalRate = $derived(ship.battles && ship.survived_battles ? ((ship.survived_battles / ship.battles) * 100).toFixed(1) : null);
+	const avgXp = $derived(ship.battles && ship.xp ? Math.round(ship.xp / ship.battles) : null);
+	const avgFrags = $derived(ship.battles && ship.frags ? (ship.frags / ship.battles).toFixed(2) : null);
+	const lastBattle = $derived(ship.last_battle_time ? new Date(ship.last_battle_time * 1000).toLocaleString('en-US', {
 		month: 'short',
 		day: 'numeric',
 		year: 'numeric',
 		hour: 'numeric',
 		minute: '2-digit',
 		hour12: true
-	}) : null;
+	}) : null);
 </script>
 
 <div
