@@ -2,6 +2,7 @@ export interface SearchFilters {
 	tiers: string[];
 	types: string[];
 	nations: string[];
+	categories: string[];
 	shipName: string;
 }
 
@@ -11,7 +12,7 @@ export interface SearchFilters {
  * - "tier 10" -> tiers: ["10"]
  * - "high tier battleships" -> tiers: ["8", "9", "10", "11"], types: ["Battleship"]
  * - "Japanese cruiser" -> nations: ["japan"], types: ["Cruiser"]
- * - "premium tier 8" -> tiers: ["8"], (and would filter premium separately)
+ * - "premium tier 8" -> tiers: ["8"], categories: ["premium"]
  */
 export function parseSearchQuery(query: string): SearchFilters {
 	const lowerQuery = query.toLowerCase().trim();
@@ -20,6 +21,7 @@ export function parseSearchQuery(query: string): SearchFilters {
 		tiers: [],
 		types: [],
 		nations: [],
+		categories: [],
 		shipName: ''
 	};
 	
@@ -49,6 +51,13 @@ export function parseSearchQuery(query: string): SearchFilters {
 	const nationMatches = parseNations(lowerQuery);
 	if (nationMatches.length > 0) {
 		filters.nations = nationMatches;
+		matchedSomething = true;
+	}
+	
+	// Parse Categories (premium/special/tech tree)
+	const categoryMatches = parseCategories(lowerQuery);
+	if (categoryMatches.length > 0) {
+		filters.categories = categoryMatches;
 		matchedSomething = true;
 	}
 	
@@ -201,6 +210,27 @@ function parseNations(query: string): string[] {
 	return nations;
 }
 
+function parseCategories(query: string): string[] {
+	const categories: string[] = [];
+	
+	// Premium ships
+	if (/\bpremium\b/i.test(query)) {
+		categories.push('premium');
+	}
+	
+	// Special ships
+	if (/\b(special|promo|event|reward)\b/i.test(query)) {
+		categories.push('special');
+	}
+	
+	// Tech tree ships (regular/standard/researchable)
+	if (/\b(tech\s*tree|standard|regular|researchable|silver)\b/i.test(query)) {
+		categories.push('tech_tree');
+	}
+	
+	return categories;
+}
+
 function convertRomanToNumber(roman: string): string | null {
 	const romanMap: Record<string, number> = {
 		'i': 1, 'ii': 2, 'iii': 3, 'iv': 4, 'v': 5,
@@ -249,8 +279,8 @@ function extractShipName(query: string): string {
 		cleaned = cleaned.replace(regex, '');
 	}
 	
-	// Remove premium/special keywords
-	cleaned = cleaned.replace(/\b(premium|special|promo)\b/gi, '');
+	// Remove premium/special/tech tree keywords
+	cleaned = cleaned.replace(/\b(premium|special|promo|event|reward|tech\s*tree|standard|regular|researchable|silver)\b/gi, '');
 	
 	// Remove punctuation (commas, hyphens, etc.) that might be left over
 	cleaned = cleaned.replace(/[,;]/g, ' ');

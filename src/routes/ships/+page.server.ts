@@ -25,9 +25,25 @@ export const load = async ({ cookies }: { cookies: any }) => {
 		
 		// Convert to array and filter out null/undefined values
 		// Also ensure we only include ships that the player actually owns
+		// Merge battle statistics from playerShips into encyclopedia data
 		const ships: WargamingShip[] = Object.values(shipsData)
 			.filter((ship): ship is WargamingShip => ship !== null && ship !== undefined)
-			.filter(ship => playerShipIds.has(ship.ship_id));
+			.filter(ship => playerShipIds.has(ship.ship_id))
+			.map(ship => {
+				// Find corresponding player ship data for battle stats
+				const playerShipData = shipsInPort.find(ps => ps.ship_id === ship.ship_id);
+				
+				return {
+					...ship,
+					battles: playerShipData?.battles,
+					wins: playerShipData?.wins,
+					damage_dealt: playerShipData?.damage_dealt,
+					xp: playerShipData?.xp,
+					frags: playerShipData?.frags,
+					survived_battles: playerShipData?.survived_battles,
+					last_battle_time: playerShipData?.last_battle_time
+				};
+			});
 		
 		// Get unique values for filters
 		const nations = [...new Set(ships.map(s => s.nation))].sort();

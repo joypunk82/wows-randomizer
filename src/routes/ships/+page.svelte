@@ -3,6 +3,7 @@
 	import FilterSelect from '$lib/components/FilterSelect.svelte';
 	import DiceButton from '$lib/components/DiceButton.svelte';
 	import SearchBox from '$lib/components/SearchBox.svelte';
+	import ShipStatsModal from '$lib/components/ShipStatsModal.svelte';
 	import { parseSearchQuery } from '$lib/utils/searchParser';
 	import type { WargamingShip } from '$lib/server/wargaming';
 	
@@ -28,6 +29,7 @@
 	let selectedNations = $state<Set<string>>(new Set(data.nations));
 	let selectedTiers = $state<Set<string>>(new Set(data.tiers.map(t => t.toString())));
 	let selectedTypes = $state<Set<string>>(new Set(data.types));
+	let selectedCategories = $state<Set<string>>(new Set(['tech_tree', 'premium', 'special']));
 	
 	// Search state
 	let searchQuery = $state('');
@@ -37,6 +39,9 @@
 	let selectedShip = $state<WargamingShip | null>(null);
 	let isRolling = $state(false);
 	
+	// Modal state
+	let statsModalShip = $state<WargamingShip | null>(null);
+	
 	// Filtered ships
 	const filteredShips = $derived(() => {
 		return data.ships.filter(ship => {
@@ -44,6 +49,12 @@
 			if (selectedNations.size > 0 && !selectedNations.has(ship.nation)) return false;
 			if (selectedTiers.size > 0 && !selectedTiers.has(ship.tier.toString())) return false;
 			if (selectedTypes.size > 0 && !selectedTypes.has(ship.type)) return false;
+			
+			// Filter by category (premium/special/tech tree)
+			if (selectedCategories.size > 0) {
+				const shipCategory = ship.is_special ? 'special' : (ship.is_premium ? 'premium' : 'tech_tree');
+				if (!selectedCategories.has(shipCategory)) return false;
+			}
 			
 			// Filter by ship name search
 			if (searchShipName && !ship.name.toLowerCase().includes(searchShipName.toLowerCase())) {
@@ -57,6 +68,18 @@
 	// Handle search query changes
 	function handleSearchChange(query: string) {
 		searchQuery = query;
+		
+		// If search is cleared, reset all filters to defaults
+		if (!query || query.trim() === '') {
+			selectedNations = new Set(data.nations);
+			selectedTiers = new Set(data.tiers.map(t => t.toString()));
+			selectedTypes = new Set(data.types);
+			selectedCategories = new Set(['tech_tree', 'premium', 'special']);
+			searchShipName = '';
+			selectedShip = null;
+			return;
+		}
+		
 		const parsed = parseSearchQuery(query);
 		
 		// If filters were detected, apply them
@@ -68,6 +91,9 @@
 		}
 		if (parsed.nations.length > 0) {
 			selectedNations = new Set(parsed.nations);
+		}
+		if (parsed.categories.length > 0) {
+			selectedCategories = new Set(parsed.categories);
 		}
 		
 		// Always update ship name filter
@@ -103,6 +129,13 @@
 		'AirCarrier': { label: 'Aircraft Carrier', icon: '✈️' },
 		'Submarine': { label: 'Submarine', icon: '🔱' }
 	};
+	
+	// Category options
+	const categoryOptions = [
+		{ value: 'tech_tree', label: 'Tech Tree', icon: '⚙️' },
+		{ value: 'premium', label: 'Premium', icon: '⭐' },
+		{ value: 'special', label: 'Special', icon: '🎖️' }
+	];
 	
 	// Nation names for display (legacy, keep for compatibility)
 	const nationNames: Record<string, string> = {
@@ -167,11 +200,17 @@
 		sidebarOpen = true;
 	}
 	
+	// View ship stats
+	function handleViewStats(ship: WargamingShip) {
+		statsModalShip = ship;
+	}
+	
 	// Reset all filters to default (everything selected)
 	function resetAllFilters() {
 		selectedNations = new Set(data.nations);
 		selectedTiers = new Set(data.tiers.map(t => t.toString()));
 		selectedTypes = new Set(data.types);
+		selectedCategories = new Set(['tech_tree', 'premium', 'special']);
 		searchQuery = '';
 		searchShipName = '';
 		selectedShip = null;
@@ -255,6 +294,13 @@
 						icon: nationData[n]?.flag
 					}))}
 				/>
+				
+				<FilterSelect
+					label="Category"
+					selectedValues={selectedCategories}
+					onchange={(vals) => { selectedCategories = vals; selectedShip = null; }}
+					options={categoryOptions}
+				/>
 			</div>
 			
 			<!-- Ship Count in Sidebar -->
@@ -330,7 +376,11 @@
 					</h3>
 					<p class="text-[#7a8b99] text-lg">Deploy this vessel, Captain!</p>
 				</div>
-				<ShipCard ship={selectedShip} highlighted={true} />
+				<ShipCard 
+					ship={selectedShip} 
+					highlighted={true}
+					onViewStats={handleViewStats}
+				/>
 			</div>
 		{/if}
 		
@@ -350,6 +400,7 @@
 							onFilterByType={filterByType}
 							onFilterByTier={filterByTier}
 							onFilterByNation={filterByNation}
+							onViewStats={handleViewStats}
 						/>
 					{/each}
 				</div>
@@ -357,3 +408,9 @@
 		</div>
 	</div>
 </div>
+
+<!-- Ship Stats Modal -->
+<ShipStatsModal 
+	ship={statsModalShip}
+	onClose={() => statsModalShip = null}
+/>

@@ -8,6 +8,14 @@ export interface WargamingShip {
 	nation: string;
 	is_premium: boolean;
 	is_special: boolean;
+	// Battle statistics (optional, from player's account data)
+	battles?: number;
+	wins?: number;
+	damage_dealt?: number;
+	xp?: number;
+	frags?: number;
+	survived_battles?: number;
+	last_battle_time?: number;
 }
 
 export interface AccountShip {
@@ -15,6 +23,11 @@ export interface AccountShip {
 	last_battle_time?: number;
 	account_id?: number;
 	battles?: number;
+	wins?: number;
+	damage_dealt?: number;
+	xp?: number;
+	frags?: number;
+	survived_battles?: number;
 	private?: {
 		in_garage?: boolean;
 		battle_life_time?: number;
@@ -83,7 +96,18 @@ export async function getPlayerShips(accountId: string, accessToken: string, reg
 	const data = await response.json();
 	
 	if (data.status === 'ok' && data.data && data.data[accountId]) {
-		return data.data[accountId];
+		// Flatten the pvp stats to the root level but preserve private object
+		return data.data[accountId].map((ship: any) => ({
+			ship_id: ship.ship_id,
+			last_battle_time: ship.last_battle_time,
+			private: ship.private, // Keep the private object with in_garage flag
+			battles: ship.pvp?.battles,
+			wins: ship.pvp?.wins,
+			damage_dealt: ship.pvp?.damage_dealt,
+			xp: ship.pvp?.xp,
+			frags: ship.pvp?.frags,
+			survived_battles: ship.pvp?.survived_battles
+		}));
 	}
 	
 	return [];

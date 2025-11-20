@@ -39,15 +39,23 @@ Type a query in the search box and it will:
 - `Italian` or `Italy` - Shows Italian ships
 - And more...
 
+### Category Searches
+- `premium` - Shows only premium ships
+- `special` - Shows only special/event/reward ships
+- `tech tree` or `standard` or `regular` - Shows only researchable tech tree ships
+
 ### Combined Searches
 You can combine multiple filters:
 - `high tier battleship` - Tiers 8-11 + Battleships only
 - `tier 7-10 cruiser` - Tiers 7-10 + Cruisers only
 - `Japanese cruiser` - Japanese nation + Cruisers only
+- `premium tier 10` - Premium tier 10 ships
 - `tier 10 American` - Tier 10 + American ships
 - `german bb` - German + Battleships
 - `tier 8 destroyer` - Tier 8 + Destroyers
 - `t5-7 dd` - Tiers 5-7 + Destroyers
+- `special battleship` - Special/event battleships
+- `premium japanese` - Premium Japanese ships
 
 ### Ship Name Searches
 If no filter keywords are found, the entire query searches ship names:
