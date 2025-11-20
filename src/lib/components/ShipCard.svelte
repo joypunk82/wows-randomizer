@@ -99,10 +99,10 @@
 	role="article"
 >
 	{#if isFavorite}
-		<div class="absolute top-0 right-0 w-0 h-0 border-t-[50px] border-t-[#00CED1] border-l-[50px] border-l-transparent shadow-lg" style="filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));" title="Favorite"></div>
+		<div class="absolute top-0 right-0 overflow-hidden" style="width: 0; height: 0; border-style: solid; border-width: 0 60px 60px 0; border-color: transparent #00CED1 transparent transparent; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));" title="Favorite"></div>
 	{/if}
 	{#if isBlacklisted}
-		<div class="absolute top-0 right-0 w-0 h-0 border-t-[50px] border-t-[#c41e3a] border-l-[50px] border-l-transparent shadow-lg" style="filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));" title="Blacklisted"></div>
+		<div class="absolute top-0 right-0 overflow-hidden" style="width: 0; height: 0; border-style: solid; border-width: 0 60px 60px 0; border-color: transparent #c41e3a transparent transparent; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));" title="Blacklisted"></div>
 	{/if}
 	
 	<div class="mb-3">
