@@ -2,6 +2,8 @@
 	import ShipCard from '$lib/components/ShipCard.svelte';
 	import FilterSelect from '$lib/components/FilterSelect.svelte';
 	import DiceButton from '$lib/components/DiceButton.svelte';
+	import SearchBox from '$lib/components/SearchBox.svelte';
+	import { parseSearchQuery } from '$lib/utils/searchParser';
 	import type { WargamingShip } from '$lib/server/wargaming';
 	
 	interface Props {
@@ -27,6 +29,10 @@
 	let selectedTiers = $state<Set<string>>(new Set(data.tiers.map(t => t.toString())));
 	let selectedTypes = $state<Set<string>>(new Set(data.types));
 	
+	// Search state
+	let searchQuery = $state('');
+	let searchShipName = $state('');
+	
 	// Random ship state
 	let selectedShip = $state<WargamingShip | null>(null);
 	let isRolling = $state(false);
@@ -34,14 +40,71 @@
 	// Filtered ships
 	const filteredShips = $derived(() => {
 		return data.ships.filter(ship => {
+			// Filter by checkboxes
 			if (selectedNations.size > 0 && !selectedNations.has(ship.nation)) return false;
 			if (selectedTiers.size > 0 && !selectedTiers.has(ship.tier.toString())) return false;
 			if (selectedTypes.size > 0 && !selectedTypes.has(ship.type)) return false;
+			
+			// Filter by ship name search
+			if (searchShipName && !ship.name.toLowerCase().includes(searchShipName.toLowerCase())) {
+				return false;
+			}
+			
 			return true;
 		});
 	});
 	
-	// Nation names for display
+	// Handle search query changes
+	function handleSearchChange(query: string) {
+		searchQuery = query;
+		const parsed = parseSearchQuery(query);
+		
+		// If filters were detected, apply them
+		if (parsed.tiers.length > 0) {
+			selectedTiers = new Set(parsed.tiers);
+		}
+		if (parsed.types.length > 0) {
+			selectedTypes = new Set(parsed.types);
+		}
+		if (parsed.nations.length > 0) {
+			selectedNations = new Set(parsed.nations);
+		}
+		
+		// Always update ship name filter
+		searchShipName = parsed.shipName;
+		
+		// Clear selected ship when search changes
+		selectedShip = null;
+	}
+	
+	// Nation names and flags for display
+	const nationData: Record<string, { label: string; flag: string }> = {
+		'japan': { label: 'Japan', flag: '🇯🇵' },
+		'usa': { label: 'USA', flag: '🇺🇸' },
+		'ussr': { label: 'U.S.S.R.', flag: '🚩' },
+		'germany': { label: 'Germany', flag: '🇩🇪' },
+		'uk': { label: 'U.K.', flag: '🇬🇧' },
+		'france': { label: 'France', flag: '🇫🇷' },
+		'pan_asia': { label: 'Pan-Asia', flag: '🌏' },
+		'italy': { label: 'Italy', flag: '🇮🇹' },
+		'commonwealth': { label: 'Commonwealth', flag: '🏴' },
+		'pan_america': { label: 'Pan-America', flag: '🌎' },
+		'europe': { label: 'Europe', flag: '🇪🇺' },
+		'netherlands': { label: 'Netherlands', flag: '🇳🇱' },
+		'spain': { label: 'Spain', flag: '🇪🇸' },
+		'portugal': { label: 'Portugal', flag: '🇵🇹' }
+	};
+	
+	// Type icons and labels
+	const typeData: Record<string, { label: string; icon: string }> = {
+		'Destroyer': { label: 'Destroyer', icon: '🚢' },
+		'Cruiser': { label: 'Cruiser', icon: '⚓' },
+		'Battleship': { label: 'Battleship', icon: '🛡️' },
+		'AirCarrier': { label: 'Aircraft Carrier', icon: '✈️' },
+		'Submarine': { label: 'Submarine', icon: '🔱' }
+	};
+	
+	// Nation names for display (legacy, keep for compatibility)
 	const nationNames: Record<string, string> = {
 		'usa': 'USA',
 		'japan': 'Japan',
@@ -109,6 +172,8 @@
 		selectedNations = new Set(data.nations);
 		selectedTiers = new Set(data.tiers.map(t => t.toString()));
 		selectedTypes = new Set(data.types);
+		searchQuery = '';
+		searchShipName = '';
 		selectedShip = null;
 	}
 </script>
@@ -135,30 +200,37 @@
 			<!-- Reset All Button -->
 			<button
 				onclick={resetAllFilters}
-				class="w-full px-4 py-3 mb-6 bg-[#2a3952] hover:bg-[#1a2942] text-[#d4af37] hover:text-[#f4d03f] font-bold rounded-lg border-2 border-[#7a8b99] hover:border-[#d4af37] transition-all uppercase tracking-wide text-sm"
+				class="w-full px-4 py-3 mb-4 bg-[#2a3952] hover:bg-[#1a2942] text-[#d4af37] hover:text-[#f4d03f] font-bold rounded-lg border-2 border-[#7a8b99] hover:border-[#d4af37] transition-all uppercase tracking-wide text-sm"
 			>
 				Reset All Filters
 			</button>
 			
+			<!-- Search Box -->
+			<div class="mb-6">
+				<SearchBox 
+					bind:value={searchQuery}
+					onchange={handleSearchChange}
+					placeholder="Search ships or use filters..."
+				/>
+				{#if searchQuery}
+					<div class="mt-2 text-xs text-[#7a8b99] px-1">
+						{#if searchShipName}
+							<span class="text-[#aabaca]">Searching for:</span> <span class="text-[#d4af37]">{searchShipName}</span>
+						{/if}
+					</div>
+				{/if}
+			</div>
+			
 			<!-- Filters -->
 			<div class="space-y-6">
-				<FilterSelect
-					label="Nation"
-					selectedValues={selectedNations}
-					onchange={(vals) => { selectedNations = vals; selectedShip = null; }}
-					options={data.nations.map(n => ({ 
-						value: n, 
-						label: nationNames[n] || n 
-					}))}
-				/>
-				
 				<FilterSelect
 					label="Tier"
 					selectedValues={selectedTiers}
 					onchange={(vals) => { selectedTiers = vals; selectedShip = null; }}
 					options={data.tiers.map(t => ({ 
 						value: t.toString(), 
-						label: `Tier ${t}` 
+						label: t === 11 ? '★' : (t < 10 ? ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X'][t - 1] : 'X'),
+						icon: t === 11 ? '⭐' : undefined
 					}))}
 				/>
 				
@@ -168,7 +240,19 @@
 					onchange={(vals) => { selectedTypes = vals; selectedShip = null; }}
 					options={data.types.map(t => ({ 
 						value: t, 
-						label: formatType(t)
+						label: typeData[t]?.label || t,
+						icon: typeData[t]?.icon
+					}))}
+				/>
+				
+				<FilterSelect
+					label="Nation"
+					selectedValues={selectedNations}
+					onchange={(vals) => { selectedNations = vals; selectedShip = null; }}
+					options={data.nations.map(n => ({ 
+						value: n, 
+						label: nationData[n]?.label || n,
+						icon: nationData[n]?.flag
 					}))}
 				/>
 			</div>
