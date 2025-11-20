@@ -153,11 +153,14 @@
 	async function toggleFavorite(shipId: number) {
 		if (favorites.has(shipId)) {
 			favorites.delete(shipId);
+			favorites = new Set(favorites); // Trigger reactivity
 		} else {
 			favorites.add(shipId);
+			favorites = new Set(favorites); // Trigger reactivity
 			// Remove from blacklist if it was there
 			if (blacklist.has(shipId)) {
 				blacklist.delete(shipId);
+				blacklist = new Set(blacklist); // Trigger reactivity
 				await saveBlacklist();
 			}
 		}
@@ -167,11 +170,14 @@
 	async function toggleBlacklist(shipId: number) {
 		if (blacklist.has(shipId)) {
 			blacklist.delete(shipId);
+			blacklist = new Set(blacklist); // Trigger reactivity
 		} else {
 			blacklist.add(shipId);
+			blacklist = new Set(blacklist); // Trigger reactivity
 			// Remove from favorites if it was there
 			if (favorites.has(shipId)) {
 				favorites.delete(shipId);
+				favorites = new Set(favorites); // Trigger reactivity
 				await saveFavorites();
 			}
 		}
@@ -181,6 +187,7 @@
 	async function clearFavorites() {
 		if (confirm('Are you sure you want to clear all favorites?')) {
 			favorites.clear();
+			favorites = new Set(favorites); // Trigger reactivity
 			await saveFavorites();
 		}
 	}
@@ -188,6 +195,7 @@
 	async function clearBlacklist() {
 		if (confirm('Are you sure you want to clear all blacklisted ships?')) {
 			blacklist.clear();
+			blacklist = new Set(blacklist); // Trigger reactivity
 			await saveBlacklist();
 		}
 	}
