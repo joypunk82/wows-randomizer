@@ -49,9 +49,10 @@
 	// Modal state
 	let statsModalShip = $state<WargamingShip | null>(null);
 	
-	// Filtered ships - separated into active and blacklisted
+	// Filtered ships - separated into favorites, regular, and blacklisted
 	const filteredShips = $derived(() => {
-		const active: WargamingShip[] = [];
+		const favs: WargamingShip[] = [];
+		const regular: WargamingShip[] = [];
 		const blacklisted: WargamingShip[] = [];
 		
 		data.ships.forEach(ship => {
@@ -75,16 +76,18 @@
 				return;
 			}
 			
-			// Separate blacklisted ships
+			// Separate into favorites, regular, and blacklisted
 			if (blacklist.has(ship.ship_id)) {
 				blacklisted.push(ship);
+			} else if (favorites.has(ship.ship_id)) {
+				favs.push(ship);
 			} else {
-				active.push(ship);
+				regular.push(ship);
 			}
 		});
 		
-		// Return active ships followed by blacklisted ships
-		return [...active, ...blacklisted];
+		// Return favorites first, then regular ships, then blacklisted ships
+		return [...favs, ...regular, ...blacklisted];
 	});
 	
 	// Handle search query changes
