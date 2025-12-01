@@ -98,6 +98,30 @@ function parseTiers(query: string): string[] {
 		return ['11'];
 	}
 	
+	// Tier plus (e.g., "tier 5+", "t7+", "5+") - tier X and above
+	const plusPatterns = [
+		/tier\s*(\d+)\s*\+/gi,
+		/t(\d+)\s*\+/gi,
+		/\b(\d+)\s*\+/gi,
+	];
+	
+	for (const pattern of plusPatterns) {
+		const matches = [...query.matchAll(pattern)];
+		for (const match of matches) {
+			const start = parseInt(match[1]);
+			if (start >= 1 && start <= 11) {
+				for (let i = start; i <= 11; i++) {
+					tiers.push(i.toString());
+				}
+			}
+		}
+	}
+	
+	// If we found plus matches, return them
+	if (tiers.length > 0) {
+		return [...new Set(tiers)];
+	}
+	
 	// Tier ranges (e.g., "tier 7-10", "t5-8", "tier 3 to 6")
 	const rangePatterns = [
 		/tier\s*(\d+)\s*[-–—to]\s*(\d+)/gi,
@@ -245,8 +269,11 @@ function extractShipName(query: string): string {
 	// Remove all known filter keywords to extract potential ship name
 	let cleaned = query;
 	
-	// Remove tier keywords (including ranges)
+	// Remove tier keywords (including ranges and plus notation)
 	cleaned = cleaned.replace(/\b(high|mid|low|top|bottom|middle)\s*(tier|lvl)\b/gi, '');
+	cleaned = cleaned.replace(/\btier\s*(\d+|i{1,3}|iv|v|vi{0,3}|ix|x)\s*\+/gi, ''); // tier 5+ style
+	cleaned = cleaned.replace(/\bt(\d+)\s*\+/gi, ''); // t5+ style
+	cleaned = cleaned.replace(/\b(\d+)\s*\+/gi, ''); // 5+ style
 	cleaned = cleaned.replace(/\btier\s*(\d+|i{1,3}|iv|v|vi{0,3}|ix|x)\s*[-–—to]\s*(\d+|i{1,3}|iv|v|vi{0,3}|ix|x)\b/gi, ''); // Ranges
 	cleaned = cleaned.replace(/\bt(\d+)\s*[-–—to]\s*(\d+)\b/gi, ''); // t7-10 style ranges
 	cleaned = cleaned.replace(/\btier\s*(\d+|i{1,3}|iv|v|vi{0,3}|ix|x)\b/gi, '');

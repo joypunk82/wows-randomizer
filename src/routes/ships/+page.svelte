@@ -90,6 +90,30 @@
 		return [...favs, ...regular, ...blacklisted];
 	});
 	
+	// Ships eligible for randomization (excludes blacklisted ships)
+	const eligibleShips = $derived(() => {
+		return filteredShips().filter(ship => !blacklist.has(ship.ship_id));
+	});
+	
+	// Check if filters are in an invalid state (nothing selected)
+	const hasInvalidFilters = $derived(() => {
+		return selectedNations.size === 0 || 
+		       selectedTiers.size === 0 || 
+		       selectedTypes.size === 0 || 
+		       selectedCategories.size === 0;
+	});
+	
+	// Get specific reason why no ships are available
+	const noShipsReason = $derived(() => {
+		if (selectedNations.size === 0) return 'No nations selected. Please select at least one nation.';
+		if (selectedTiers.size === 0) return 'No tiers selected. Please select at least one tier.';
+		if (selectedTypes.size === 0) return 'No ship types selected. Please select at least one type.';
+		if (selectedCategories.size === 0) return 'No categories selected. Please select at least one category.';
+		if (filteredShips().length === 0) return 'No ships match your current filters.';
+		if (eligibleShips().length === 0) return 'All filtered ships are blacklisted. Remove ships from the blacklist or adjust your filters.';
+		return '';
+	});
+	
 	// Handle search query changes
 	function handleSearchChange(query: string) {
 		searchQuery = query;
@@ -256,7 +280,7 @@
 	
 	// Roll dice function
 	function rollDice() {
-		const ships = filteredShips();
+		const ships = eligibleShips();
 		
 		if (ships.length === 0) return;
 		
@@ -523,10 +547,18 @@
 			<div class="flex justify-center">
 				<DiceButton
 					onclick={rollDice}
-					disabled={filteredShips().length === 0 || isRolling}
+					disabled={hasInvalidFilters() || eligibleShips().length === 0 || isRolling}
 					rolling={isRolling}
 				/>
 			</div>
+			
+			<!-- No eligible ships message -->
+			{#if hasInvalidFilters() || eligibleShips().length === 0}
+				<div class="mt-4 p-4 bg-[#2a3952] border-2 border-[#d4af37] rounded-lg">
+					<p class="text-[#d4af37] font-bold">⚠️ No ships available for randomization</p>
+					<p class="text-[#7a8b99] text-sm mt-1">{noShipsReason()}</p>
+				</div>
+			{/if}
 		</div>
 		
 		<!-- Selected Ship -->
